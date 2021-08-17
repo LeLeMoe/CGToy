@@ -6,9 +6,15 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-winit = "0.25"
-wgpu = "0.9"
-glam = "0.17"
-futures = "0.3"
-log = "0.4"
 env_logger = "0.9"
+futures = "0.3"
+glam = "0.17"
+log = "0.4"
+wgpu = "0.9"
+winit = "0.25"
+
+[dependencies.gltf]
+version = "0.16"
+features = [
+    "KHR_lights_punctual"
+]
