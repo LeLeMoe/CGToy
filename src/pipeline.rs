@@ -4,10 +4,9 @@ use winit::{dpi::PhysicalSize, window::Window};
 pub struct PipelineState {
     size: PhysicalSize<u32>,
     surface: wgpu::Surface,
+    sc_config: wgpu::SurfaceConfiguration,
     device: wgpu::Device,
     queue: wgpu::Queue,
-    sc_desc: wgpu::SwapChainDescriptor,
-    swap_chain: wgpu::SwapChain,
     render_pipeline: wgpu::RenderPipeline,
 }
 
@@ -17,7 +16,7 @@ impl PipelineState {
         // Get window size
         let size = window.inner_size();
         // Create WGPU instance
-        let instance = wgpu::Instance::new(wgpu::BackendBit::VULKAN);
+        let instance = wgpu::Instance::new(wgpu::Backends::PRIMARY);
         // Create surface
         let surface = unsafe { instance.create_surface(window) };
         // Request adapter
@@ -40,20 +39,20 @@ impl PipelineState {
             )
             .await
             .unwrap();
-        // Create swap chain
-        let sc_desc = wgpu::SwapChainDescriptor {
-            usage: wgpu::TextureUsage::RENDER_ATTACHMENT,
-            format: adapter.get_swap_chain_preferred_format(&surface).unwrap(),
+        // Configure surface
+        let sc_format = surface.get_preferred_format(&adapter).unwrap();
+        let sc_config = wgpu::SurfaceConfiguration {
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            format: sc_format,
             width: size.width,
             height: size.height,
-            present_mode: wgpu::PresentMode::Fifo,
+            present_mode: wgpu::PresentMode::Mailbox,
         };
-        let swap_chain = device.create_swap_chain(&surface, &sc_desc);
+        surface.configure(&device, &sc_config);
         // Create shader module
         let shader_color = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
             label: Some("CGToy - Shader(color)"),
             source: wgpu::ShaderSource::Wgsl(include_str!("shaders/color.wgsl").into()),
-            flags: wgpu::ShaderFlags::all(),
         });
         // Create pipeline layout
         let render_pipeline_layout =
@@ -89,40 +88,37 @@ impl PipelineState {
             fragment: Some(wgpu::FragmentState {
                 module: &shader_color,
                 entry_point: "main",
-                targets: &[wgpu::ColorTargetState {
-                    format: sc_desc.format,
-                    blend: Some(wgpu::BlendState::REPLACE),
-                    write_mask: wgpu::ColorWrite::ALL,
-                }],
+                targets: &[sc_format.into()],
             }),
         });
         Self {
             size,
             surface,
+            sc_config,
             device,
             queue,
-            sc_desc,
-            swap_chain,
             render_pipeline,
         }
     }
 
     pub fn resize(&mut self, new_size: PhysicalSize<u32>) {
         if new_size.width != 0 && new_size.height != 0 {
-            self.size = new_size;
-            self.sc_desc.width = new_size.width;
-            self.sc_desc.height = new_size.height;
-            self.swap_chain = self.device.create_swap_chain(&self.surface, &self.sc_desc);
+            self.sc_config.width = new_size.width;
+            self.sc_config.height = new_size.height;
+            self.surface.configure(&self.device, &self.sc_config);
         }
     }
 
     pub fn render(&mut self) {
         // Get the current frame from swap chain
-        let frame = match self.swap_chain.get_current_frame() {
+        let frame = match self.surface.get_current_frame() {
             Ok(frame) => frame.output,
-            Err(wgpu::SwapChainError::Lost) => return self.resize(self.size),
+            Err(wgpu::SurfaceError::Lost) => return self.resize(self.size),
             _ => return,
         };
+        let frame_view = frame
+            .texture
+            .create_view(&wgpu::TextureViewDescriptor::default());
         // Create command encoder
         let mut encoder = self
             .device
@@ -134,7 +130,7 @@ impl PipelineState {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("CGToy - ClearPass"),
                 color_attachments: &[wgpu::RenderPassColorAttachment {
-                    view: &frame.view,
+                    view: &frame_view,
                     resolve_target: None,
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(wgpu::Color {
