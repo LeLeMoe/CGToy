@@ -20,6 +20,7 @@ enum ResourceType {
 }
 
 ///
+#[derive(Copy, Clone, Hash, Eq, PartialEq)]
 pub struct BufferID(Uuid);
 
 impl BufferID {
@@ -30,6 +31,7 @@ impl BufferID {
 }
 
 ///
+#[derive(Copy, Clone, Hash, Eq, PartialEq)]
 pub struct TextureID(Uuid);
 
 impl TextureID {
@@ -40,6 +42,7 @@ impl TextureID {
 }
 
 ///
+#[derive(Copy, Clone, Hash, Eq, PartialEq)]
 pub struct SamplerID(Uuid);
 
 impl SamplerID {

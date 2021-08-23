@@ -1,4 +1,3 @@
-use futures::executor;
 use std::time;
 use winit::{
     event::{Event, WindowEvent},
@@ -9,14 +8,15 @@ use winit::{
 mod pipeline;
 mod render;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     env_logger::init();
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new()
         .with_title("CGToy")
         .build(&event_loop)
         .unwrap();
-    let mut pipeline_state = executor::block_on(pipeline::PipelineState::new(&window));
+    let mut pipeline_state = pipeline::PipelineState::new(&window).await;
     let mut time_last = time::Instant::now();
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll;

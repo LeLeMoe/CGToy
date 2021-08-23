@@ -8,7 +8,6 @@ resolver = "2"
 
 [dependencies]
 env_logger = "0.9"
-futures = "0.3"
 glam = "0.17"
 log = "0.4"
 uuid = { version = "0.8", features = ["v4"] }
@@ -19,4 +18,12 @@ winit = "0.25"
 version = "0.16"
 features = [
     "KHR_lights_punctual"
+]
+
+[dependencies.tokio]
+version = "1.10"
+features = [
+    "macros",
+    "rt-multi-thread",
+    "sync"
 ]
