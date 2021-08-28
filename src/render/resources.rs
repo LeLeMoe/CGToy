@@ -19,35 +19,7 @@ enum ResourceType {
     QuerySet, // Not supported for now
 }
 
-///
-#[derive(Copy, Clone, Hash, Eq, PartialEq)]
-pub struct BufferID(Uuid);
 
-impl BufferID {
-    ///
-    pub fn new() -> Self {
-        Self(Uuid::new_v4())
-    }
-}
 
-///
-#[derive(Copy, Clone, Hash, Eq, PartialEq)]
-pub struct TextureID(Uuid);
 
-impl TextureID {
-    ///
-    pub fn new() -> Self {
-        Self(Uuid::new_v4())
-    }
-}
 
-///
-#[derive(Copy, Clone, Hash, Eq, PartialEq)]
-pub struct SamplerID(Uuid);
-
-impl SamplerID {
-    ///
-    pub fn new() -> Self {
-        Self(Uuid::new_v4())
-    }
-}
